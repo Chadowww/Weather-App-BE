@@ -3,11 +3,11 @@ controllers:
         path: ../src/Controller/
         namespace: App\Controller
     type: attribute
-register:
+app_register:
     path: /register
     controller: App\Controller\RegistrationController::register
     methods: POST
-verifyUserEmail:
+app_verify_email:
     path: /verify/email
     controller: App\Controller\RegistrationController::verifyUserEmail
-    method: GET
+    methods: GET
