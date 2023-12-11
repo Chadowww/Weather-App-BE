@@ -3,10 +3,12 @@
 namespace App\Controller;
 
 use App\Entity\User;
-use App\Form\RegistrationFormType;
+use App\Exceptions\DatabaseException;
+use App\Exceptions\InvalidRequestException;
+use App\Factory\UserFactory;
 use App\Repository\UserRepository;
 use App\Security\EmailVerifier;
-use Doctrine\ORM\EntityManagerInterface;
+use App\services\errors\ErrorRegisterService;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -14,54 +16,41 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Mime\Address;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
-use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use SymfonyCasts\Bundle\VerifyEmail\Exception\VerifyEmailExceptionInterface;
 
 class RegistrationController extends AbstractController
 {
     private EmailVerifier $emailVerifier;
+    private UserFactory $userFactory;
 
-    public function __construct(EmailVerifier $emailVerifier)
+    public function __construct(EmailVerifier $emailVerifier, UserFactory $userFactory)
     {
         $this->emailVerifier = $emailVerifier;
+        $this->userFactory = $userFactory;
     }
 
     /**
      * @throws \JsonException
+     * @throws DatabaseException
+     * @throws InvalidRequestException
      */
     public function register(
         Request $request,
         UserPasswordHasherInterface $userPasswordHasher,
-        EntityManagerInterface $entityManager
+        ErrorRegisterService $errorRegisterService,
     ): JsonResponse
     {
-        $data = json_decode($request->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        $userDot = $errorRegisterService->validateRegisterRequest($request);
 
-        $user = new User();
-        $user->setEmail($data['email']);
-        $user->setPassword(
-            $userPasswordHasher->hashPassword(
-                $user,
-                $data['password']
-            )
-        );
-        $user->setRoles((array)'ROLE_USER');
-        $user->setIsVerified(true);
-
-        $entityManager->persist($user);
-        $entityManager->flush();
-
-        // generate a signed url and email it to the user
-        $this->emailVerifier->sendEmailConfirmation('app_verify_email', $user,
-            (new TemplatedEmail())
-                ->from(new Address('contact@weather-app.fr', 'l\'équipe de Weather-App'))
-                ->to($user->getEmail())
-                ->subject('Please Confirm your Email')
-                ->htmlTemplate('registration/confirmation_email.html.twig')
+        $user = $this->userFactory->createUser(
+            $userDot->getEmail(),
+            $userPasswordHasher->hashPassword(new User(), $userDot->getPassword()),
         );
 
-        return new JsonResponse(['data' => json_encode($data)], Response::HTTP_CREATED);
+        $this->sendEmail($user);
+
+        return new JsonResponse(['201' => 'new user created'], Response::HTTP_CREATED);
     }
 
     public function verifyUserEmail(Request $request, TranslatorInterface $translator, UserRepository $userRepository): Response
@@ -91,5 +80,16 @@ class RegistrationController extends AbstractController
         $this->addFlash('success', 'Your email address has been verified.');
 
         return $this->redirectToRoute('app_register');
+    }
+
+    public function sendEmail(User $user): void
+    {
+        $this->emailVerifier->sendEmailConfirmation('app_verify_email', $user,
+            (new TemplatedEmail())
+                ->from(new Address('contact@weather-app.fr', 'l\'équipe de Weather-App'))
+                ->to($user->getEmail())
+                ->subject('Please Confirm your Email')
+                ->htmlTemplate('registration/confirmation_email.html.twig')
+        );
     }
 }

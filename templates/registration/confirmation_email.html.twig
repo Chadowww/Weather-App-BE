@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+
+<html lang="fr">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <title>Vous avez reçu une candidature</title>
+</head>
+<body style="
+    width: 100%;
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    color: #333333;
+    margin: 0;
+    padding: 0;
+    background-color: whitesmoke;">
+
+<div style="
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: whitesmoke;">
+    <div style="
+    font-size: 24px;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 10px;">Nouvelle <span style="color: green">inscription</span> </div>
+    <div style="
+    font-size: 18px;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 15px;
+      text-decoration: underline;
+">votre inscription a bien été prise en compte</div>
+    <div style="
+    font-size: 16px;
+    text-align: center;
+    margin-bottom: 20px;">
+        L'équipe de Weather-App vous remercie pour votre inscription. <br>
+        Veuillez confirmer votre adresse e-mail en cliquant sur le lien suivant :<br><br>
+        <a href="{{ signedUrl|raw }}">Confirmer mon email</a> <br><br>
+        Ce lien expirera dans {{ expiresAtMessageKey|trans(expiresAtMessageData, 'VerifyEmailBundle') }}.
+    </div>
+</div>
+</body>
+</html>
+
