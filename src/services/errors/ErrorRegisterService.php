@@ -6,6 +6,7 @@ use AllowDynamicProperties;
 use App\Dot\UserRegistrationDto;
 use App\Exceptions\InvalidRequestException;
 use App\Factory\UserFactory;
+use App\Repository\UserRepository;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
@@ -15,11 +16,13 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
         UserRegistrationDto $userRegistrationDto,
         ValidatorInterface $validator,
         UserFactory $userFactory,
+        UserRepository $userRepository,
     )
     {
         $this->userRegistrationDto = $userRegistrationDto;
         $this->validator = $validator;
         $this->userFactory = $userFactory;
+        $this->userRepository = $userRepository;
     }
 
     /**
@@ -30,7 +33,17 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
     {
         $errors = [];
 
-        $data = $request->request->all();
+        $data = json_decode($request->getContent(), true, 512, JSON_THROW_ON_ERROR);
+
+        if ($this->userRepository->findOneBy(['email' => $data['email']])) {
+            $errors[] = [
+                'field' => 'email',
+                'message' => 'The email already exists',
+                'passedValue' => $data['email']
+            ];
+            throw new InvalidRequestException(json_encode($errors, JSON_THROW_ON_ERROR), 400);
+        }
+
         $this->userRegistrationDto->setEmail($data['email']);
         $this->userRegistrationDto->setPassword($data['password']);
         $this->userRegistrationDto->setRoles(array('ROLE_USER'));
