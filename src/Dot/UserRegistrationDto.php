@@ -3,8 +3,10 @@
 namespace App\Dot;
 
 use Symfony\Component\Validator\Constraints as Assert;
+
 class UserRegistrationDto
 {
+    #[Assert\NotBlank(message: 'The email should not be blank')]
     #[Assert\Type('string', 'The email should be of type string')]
     #[Assert\Email(message: 'The email {{ value }} is not a valid email')]
     private string $email;

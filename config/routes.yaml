@@ -11,3 +11,7 @@ app_verify_email:
     path: /verify/email
     controller: App\Controller\RegistrationController::verifyUserEmail
     methods: GET
+app_login:
+    path: /secured/login_check
+    controller: App\Controller\SecurityController::login
+    methods: POST
