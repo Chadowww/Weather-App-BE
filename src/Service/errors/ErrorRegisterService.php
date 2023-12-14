@@ -1,6 +1,6 @@
 <?php
 
-namespace App\services\errors;
+namespace App\Service\errors;
 
 use AllowDynamicProperties;
 use App\Dot\UserRegistrationDto;
