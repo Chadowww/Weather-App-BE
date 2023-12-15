@@ -26,7 +26,6 @@ class UserAuthenticator extends AbstractAuthenticator implements UserLoaderInter
     {
         $this->userRepository = $userRepository;
         $this->jwtTokenManager = $jwtTokenManager;
-        error_log('construct');
     }
 
     /**
@@ -34,9 +33,7 @@ class UserAuthenticator extends AbstractAuthenticator implements UserLoaderInter
      */
     public function supports(Request $request): ?bool
     {
-        $credentials = json_decode($request->getContent(), true, 512, JSON_THROW_ON_ERROR);
-
-        return $credentials['email'] && $credentials['password'];
+        return $request->getPathInfo() === '/api/login' && $request->isMethod('POST');
     }
 
     /**
