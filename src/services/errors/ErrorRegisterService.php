@@ -2,7 +2,6 @@
 
 namespace App\services\errors;
 
-use AllowDynamicProperties;
 use App\Dot\UserRegistrationDto;
 use App\Exceptions\InvalidRequestException;
 use App\Factory\UserFactory;
@@ -10,18 +9,20 @@ use App\Repository\UserRepository;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
-#[AllowDynamicProperties] class ErrorRegisterService
+class ErrorRegisterService
 {
+    private UserRegistrationDto $userRegistrationDto;
+    private ValidatorInterface $validator;
+    private UserRepository $userRepository;
+
     public function __construct(
         UserRegistrationDto $userRegistrationDto,
         ValidatorInterface $validator,
-        UserFactory $userFactory,
         UserRepository $userRepository,
     )
     {
         $this->userRegistrationDto = $userRegistrationDto;
         $this->validator = $validator;
-        $this->userFactory = $userFactory;
         $this->userRepository = $userRepository;
     }
 

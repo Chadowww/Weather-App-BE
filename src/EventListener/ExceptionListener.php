@@ -18,7 +18,7 @@ class ExceptionListener
     public function onKernelException(ExceptionEvent $event): void
     {
         $exception = $event->getThrowable();
-        $message = json_decode($exception->getMessage(), false) ?? $exception->getMessage();
+        $message = json_decode($exception->getMessage(), false, 512, JSON_THROW_ON_ERROR) ?? $exception->getMessage();
 
         switch (true) {
             case $exception instanceof InvalidRequestException:
