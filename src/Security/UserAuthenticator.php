@@ -8,6 +8,7 @@ use Symfony\Bridge\Doctrine\Security\User\UserLoaderInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use \Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\Exception\UserNotFoundException;
@@ -21,11 +22,17 @@ class UserAuthenticator extends AbstractAuthenticator implements UserLoaderInter
 {
     private UserRepository $userRepository;
     private $jwtTokenManager;
+    protected SerializerInterface $serializer;
 
-    public function __construct(UserRepository $userRepository, JWTTokenManagerInterface $jwtTokenManager)
+    public function __construct(
+        UserRepository $userRepository,
+        JWTTokenManagerInterface $jwtTokenManager,
+        SerializerInterface $serializer
+    )
     {
         $this->userRepository = $userRepository;
         $this->jwtTokenManager = $jwtTokenManager;
+        $this->serializer = $serializer;
     }
 
     /**
@@ -74,13 +81,17 @@ class UserAuthenticator extends AbstractAuthenticator implements UserLoaderInter
         );
     }
 
+    /**
+     * @throws \JsonException
+     */
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?JsonResponse
     {
         $user = $token->getUser();
+        $userData = $this->serializer->serialize($user, 'json');
         /** @var string $token */
         $token = $this->jwtTokenManager->create($user);
 
-        return new JsonResponse(['token' => $token]);
+        return new JsonResponse(['token' => $token, 'user' => $userData]);
     }
 
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?Response
