@@ -8,8 +8,10 @@ use App\Exceptions\DatabaseException;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 
-#[AllowDynamicProperties] class UserFactory
+class UserFactory
 {
+    private EntityManagerInterface $entityManager;
+
     public function __construct(EntityManagerInterface $entityManager)
     {
         $this->entityManager = $entityManager;

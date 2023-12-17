@@ -3,17 +3,14 @@
 namespace App\Controller;
 
 use App\Entity\User;
-use App\Exceptions\DatabaseException;
-use App\Exceptions\InvalidRequestException;
+use App\Exceptions\{DatabaseException, InvalidRequestException};
 use App\Factory\UserFactory;
 use App\Repository\UserRepository;
 use App\Security\EmailVerifier;
 use App\services\errors\ErrorRegisterService;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\{JsonResponse, Request, Response};
 use Symfony\Component\Mime\Address;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;

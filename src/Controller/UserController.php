@@ -4,20 +4,25 @@ namespace App\Controller;
 
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Serializer\SerializerInterface;
 
 class UserController extends AbstractController
 {
+    private SerializerInterface $serializer;
+
+    public function __construct(SerializerInterface $serializer)
+    {
+        $this->serializer = $serializer;
+    }
+
     public function user(): Response
     {
-        error_log('user() called');
         $user = $this->getUser();
 
         if (!$user) {
-            // Handle the case where there is no authenticated user
             return $this->json(['error' => 'Not authenticated'], Response::HTTP_UNAUTHORIZED);
         }
 
-        // User is authenticated, return their info
-        return $this->json(['email' => $user->getEmail()]);
+        return $this->json(['user' => $this->serializer->serialize($user, 'json')]);
     }
 }

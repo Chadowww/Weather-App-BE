@@ -5,9 +5,8 @@ namespace App\Security;
 use App\Repository\UserRepository;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Bridge\Doctrine\Security\User\UserLoaderInterface;
-use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\{JsonResponse, Request, Response};
+use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\Exception\UserNotFoundException;
@@ -20,17 +19,20 @@ use Symfony\Component\Security\Http\Authenticator\Passport\Passport;
 class UserAuthenticator extends AbstractAuthenticator implements UserLoaderInterface
 {
     private UserRepository $userRepository;
-    private $jwtTokenManager;
+    private JWTTokenManagerInterface $jwtTokenManager;
+    protected SerializerInterface $serializer;
 
-    public function __construct(UserRepository $userRepository, JWTTokenManagerInterface $jwtTokenManager)
+    public function __construct(
+        UserRepository $userRepository,
+        JWTTokenManagerInterface $jwtTokenManager,
+        SerializerInterface $serializer
+    )
     {
         $this->userRepository = $userRepository;
         $this->jwtTokenManager = $jwtTokenManager;
+        $this->serializer = $serializer;
     }
 
-    /**
-     * @throws \JsonException
-     */
     public function supports(Request $request): ?bool
     {
         return $request->getPathInfo() === '/api/login' && $request->isMethod('POST');
@@ -48,12 +50,8 @@ class UserAuthenticator extends AbstractAuthenticator implements UserLoaderInter
         }
 
         $user = $this->loadUserByIdentifier($credentials['email']);
-        if (!$user) {
-            throw new AuthenticationException('Email incorrect');
-        }
 
-        if (!$user->isVerified()) {
-            error_log('not verified');
+        if ( !$user->isVerified()) {
             throw new AuthenticationException('Your account is not verified. Please check your emails.');
         }
 
@@ -74,13 +72,20 @@ class UserAuthenticator extends AbstractAuthenticator implements UserLoaderInter
         );
     }
 
+    /**
+     * @throws \JsonException
+     */
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?JsonResponse
     {
+        error_log('hello world');
         $user = $token->getUser();
-        /** @var string $token */
-        $token = $this->jwtTokenManager->create($user);
 
-        return new JsonResponse(['token' => $token]);
+        if ($user) {
+            $jwtToken = $this->jwtTokenManager->create($user);
+            error_log('hello world');
+            return new JsonResponse(['token' => $jwtToken]);
+        }
+        return new JsonResponse(['error' => 'Invalid credentials'], Response::HTTP_UNAUTHORIZED);
     }
 
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?Response
